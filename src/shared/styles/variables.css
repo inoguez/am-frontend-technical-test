@@ -1,0 +1,22 @@
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --accent: #76dd00;
+  --arrowBackground: color-mix(in srgb, #7b7b7b, transparent 10%);
+  --arrowBackgroundActive: color-mix(in srgb, #5b5454, transparent 10%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+    --accent: #76dd00;
+    --arrowBackground: color-mix(in srgb, #7b7b7b, transparent 10%);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+  }
+}
