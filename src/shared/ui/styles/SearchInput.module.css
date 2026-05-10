@@ -1,0 +1,23 @@
+.inputContainer {
+  position: relative;
+  display: flex;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  width: 240px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 20;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.input {
+  width: 100%;
+  padding: 20px 28px 20px 35px;
+  color: var(--accent);
+}
+.input::placeholder {
+  color: color-mix(in srgb, var(--accent), transparent 40%);
+}

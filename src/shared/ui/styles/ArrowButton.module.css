@@ -1,0 +1,28 @@
+.arrowContainer {
+  border-radius: 3px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--arrowBackground);
+  backdrop-filter: blur(20px);
+}
+
+.arrowContainer:active {
+  background-color: var(--arrowBackgroundActive);
+}
+
+.arrowContainer:hover svg > path {
+  fill: var(--accent);
+}
+
+.up {
+  transform: rotate(90deg);
+}
+.right {
+  transform: rotate(180deg);
+}
+.down {
+  transform: rotate(270deg);
+}
