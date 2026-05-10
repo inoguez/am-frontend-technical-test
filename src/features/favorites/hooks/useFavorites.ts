@@ -1,6 +1,6 @@
 import { useOptimistic, useTransition } from 'react';
 
-import { useOwnerId } from '@/shared/lib/useOwnerId';
+import { useOwnerId } from '@/shared/hooks/useOwnerId';
 
 import type { Character } from '@/features/characters';
 import {
