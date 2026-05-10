@@ -27,9 +27,10 @@ export const handlers = [
     HttpResponse.json(rick),
   ),
   http.get('http://localhost:3001/favorites', () => HttpResponse.json([])),
-  http.post('http://localhost:3001/favorites', async ({ request }) =>
-    HttpResponse.json(await request.json()),
-  ),
+  http.post('http://localhost:3001/favorites', async ({ request }) => {
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json({ id: 'srv-1', ...body });
+  }),
   http.delete(
     'http://localhost:3001/favorites/:id',
     () => new HttpResponse(null, { status: 200 }),

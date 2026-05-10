@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-import type { Favorite } from '@/features/favorites/types';
+import type { Favorite, NewFavorite } from '@/features/favorites/types';
 
 export const favoritesApi = createApi({
   reducerPath: 'favoritesApi',
@@ -8,8 +8,8 @@ export const favoritesApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: process.env.NEXT_PUBLIC_API_URL! }),
   tagTypes: ['Favorite'],
   endpoints: (build) => ({
-    getFavorites: build.query<Favorite[], void>({
-      query: () => '/favorites',
+    getFavorites: build.query<Favorite[], string>({
+      query: (ownerId) => `/favorites?ownerId=${encodeURIComponent(ownerId)}`,
       providesTags: (result) =>
         result
           ? [
@@ -18,15 +18,15 @@ export const favoritesApi = createApi({
             ]
           : [{ type: 'Favorite', id: 'LIST' }],
     }),
-    addFavorite: build.mutation<Favorite, Favorite>({
-      query: (character) => ({
+    addFavorite: build.mutation<Favorite, NewFavorite>({
+      query: (favorite) => ({
         url: '/favorites',
         method: 'POST',
-        body: character,
+        body: favorite,
       }),
       invalidatesTags: [{ type: 'Favorite', id: 'LIST' }],
     }),
-    removeFavorite: build.mutation<void, number>({
+    removeFavorite: build.mutation<void, string>({
       query: (id) => ({ url: `/favorites/${id}`, method: 'DELETE' }),
       invalidatesTags: [{ type: 'Favorite', id: 'LIST' }],
     }),
