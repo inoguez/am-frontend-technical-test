@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { ReactNode } from 'react';
 
 import './globals.css';
 import { Providers } from '@/app/providers';
@@ -8,16 +9,15 @@ export const metadata: Metadata = {
   description: 'Prueba técnica Aeroméxico',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+const RootLayout = ({ children }: { children: ReactNode }) => {
   return (
     <html lang='es'>
       <body>
         <Providers>{children}</Providers>
+        <footer></footer>
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;
