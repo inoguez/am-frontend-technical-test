@@ -1,5 +1,5 @@
 .arrowContainer {
-  border-radius: 3px;
+  border-radius: 0.1875rem;
   width: 32px;
   height: 32px;
   display: flex;
@@ -7,6 +7,15 @@
   align-items: center;
   background-color: var(--arrowBackground);
   backdrop-filter: blur(20px);
+}
+
+.arrowContainer:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.arrowContainer:hover:not(:disabled) {
+  background: rgb(0 0 0 / 0.6);
 }
 
 .arrowContainer:active {

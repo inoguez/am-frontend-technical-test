@@ -1,13 +1,18 @@
 import clsx from 'clsx';
+import type { ButtonHTMLAttributes } from 'react';
 
-import styles from './styles/ArrowButton.module.css';
+import styles from './ArrowButton.module.css';
 
-interface Props {
+interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant: 'left' | 'right' | 'up' | 'down';
 }
-export const ArrowButton = ({ variant }: Props) => {
+export const ArrowButton = ({ variant, className, ...props }: Props) => {
   return (
-    <button className={styles.arrowContainer}>
+    <button
+      type='button'
+      className={clsx(styles.arrowContainer, className)}
+      {...props}
+    >
       <svg
         xmlns='http://www.w3.org/2000/svg'
         width='11'
