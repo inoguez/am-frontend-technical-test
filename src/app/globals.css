@@ -16,7 +16,6 @@ body {
   flex-direction: column;
   margin: 0;
   min-height: 100dvh;
-
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -26,4 +25,20 @@ body {
   background-image: url('/wallpaper.jpg');
   background-position: left bottom;
   background-size: 100dvh auto;
+  background-attachment: fixed;
+}
+
+footer {
+  width: 100dvw;
+  height: 50px;
+  background: linear-gradient(180deg, var(--accent) 3.03%, #1e2e00 177.63%);
+}
+
+@media (min-width: 768px) {
+  footer {
+    height: 90px;
+    z-index: -1;
+    position: fixed;
+    bottom: 0;
+  }
 }
