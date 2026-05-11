@@ -1,0 +1,22 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+  flex-grow: 1;
+  padding-top: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .page {
+    min-height: 100dvh;
+    padding-block: 3.125rem;
+  }
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  flex-grow: 1;
+}
