@@ -3,6 +3,7 @@ export {
   useGetCharactersQuery,
   useGetCharacterByIdQuery,
 } from './api/charactersApi';
+export { CharactersHome } from './components/CharactersHome/CharactersHome';
 
 export type {
   Character,
