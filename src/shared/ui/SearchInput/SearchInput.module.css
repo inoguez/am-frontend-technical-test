@@ -2,7 +2,7 @@
   position: relative;
   display: flex;
   border: 1px solid var(--accent);
-  border-radius: 8px;
+  border-radius: 0.5rem;
   width: 240px;
 }
 
@@ -12,10 +12,16 @@
   top: 50%;
   transform: translate(-50%, -50%);
 }
+.peopleIcon {
+  position: absolute;
+  right: 0.3125rem;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
 
 .input {
   width: 100%;
-  padding: 20px 28px 20px 35px;
+  padding: 1.25rem 1.75rem 1.25rem 2.1875rem;
   color: var(--accent);
 }
 .input::placeholder {
