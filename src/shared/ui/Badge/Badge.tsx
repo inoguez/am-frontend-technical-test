@@ -6,10 +6,14 @@ interface Props {
   status: Character['status'];
 }
 
-export function Badge({ status }: Props) {
+export const Badge = ({ status }: Props) => {
   return (
-    <span className={`${styles.badge} ${styles[status.toLowerCase()]}`}>
+    <span
+      className={`${styles.badge} ${styles[`badge${status}`]}`}
+      data-status={status}
+    >
+      <div className={styles.badgeCircle}></div>
       {status}
     </span>
   );
-}
+};

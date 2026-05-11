@@ -1,0 +1,35 @@
+.badge {
+  display: flex;
+  top: 3.125rem;
+  left: 0.9375rem;
+  gap: 0.9375rem;
+  padding: 0.3125rem 0.625rem;
+  text-transform: uppercase;
+  justify-content: flex-start;
+  align-items: center;
+  position: inherit;
+  background-color: #1a1a1a;
+  width: 110;
+  height: 28;
+  opacity: 0.9;
+  border-radius: 0.625rem;
+  z-index: 3;
+  text-align: center;
+}
+
+.badgeCircle {
+  border-radius: 100%;
+  height: 15px;
+  width: 15px;
+}
+
+.badge[data-status='Alive'] .badgeCircle {
+  background: radial-gradient(50% 50% at 50% 50%, #f1f510 0%, #608f09 100%);
+}
+
+.badge[data-status='Dead'] .badgeCircle {
+  background: radial-gradient(50% 50% at 50% 50%, #ff4d4d 0%, #b30000 100%);
+}
+.badge[data-status='unknown'] .badgeCircle {
+  background: radial-gradient(50% 50% at 50% 50%, #808080 0%, #333333 100%);
+}
