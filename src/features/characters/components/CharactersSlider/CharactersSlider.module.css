@@ -1,0 +1,49 @@
+.window {
+  position: relative;
+  display: grid;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+}
+
+.window[data-orientation='horizontal'] {
+  grid-template-columns: auto 1fr auto;
+}
+
+.window[data-orientation='vertical'] {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr auto;
+  justify-items: stretch;
+}
+
+.grid {
+  display: grid;
+  gap: 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    gap: 3rem;
+    padding-bottom: 5.625rem;
+  }
+}
+
+.window[data-orientation='horizontal'] .grid {
+  grid-template-columns: repeat(var(--visible, 2), 1fr);
+}
+
+.window[data-orientation='vertical'] .grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.window[data-orientation='vertical'] .firstArrow {
+  position: absolute;
+  top: -40;
+  right: -40;
+}
+
+.window[data-orientation='vertical'] .secondArrow {
+  position: absolute;
+  bottom: 55;
+  right: -40;
+}
