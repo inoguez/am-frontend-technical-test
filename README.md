@@ -1,216 +1,178 @@
 # Rick and Morty — Prueba Frontend Aeroméxico
 
-## Stack
+App de exploración de personajes de Rick and Morty con búsqueda, slider con paginación virtual, panel destacado y favoritos persistidos por usuario.
 
-- Next.js 16 (App Router) + React 19
-- TypeScript estricto
-- CSS Modules
-- Redux Toolkit + RTK Query
-- `rickmortyapi` (SDK oficial, integrado vía `queryFn`)
-- `json-server` (persistencia de favoritos)
-- Vitest + Testing Library + MSW
-- ESLint con `import/order`, `no-restricted-imports` y `eslint-plugin-testing-library`
+- Diseño: Figma de la prueba (compartido por correo).
+- API pública: [`rickmortyapi`](https://github.com/afuh/rick-and-morty-api-node).
+- API local: `json-server` sobre [el repo del enunciado](https://github.com/heatxel/amTesting).
 
 ## Levantar el proyecto
 
 ```bash
 npm install
-npm run start:all
+npm run dev:all
 ```
 
-- `json-server` en `http://localhost:3001`
-- Next.js en `http://localhost:3000`
+Next.js en `http://localhost:3000` y `json-server` en `http://localhost:3001`, leyendo y escribiendo `db.json` de la raíz.
 
-`db.json` en la raíz contiene el estado inicial (lista de favoritos vacía).
-`json-server` lee y escribe ese archivo, por lo que los favoritos persisten
-entre reinicios.
+Para correr en modo producción local:
 
-## Tests
+```bash
+npm run start:all   # build + start + json-server
+```
+
+## Correr tests
 
 ```bash
 npm test           # corrida única
 npm run test:watch # modo watch
 ```
 
-## Arquitectura
+Son 16 tests sobre las piezas con lógica no trivial: `useFavorites`, `useCharactersWindow`, `CharacterCard` y `FavoritesMenu`. No fui por porcentaje sino por riesgo de regresión.
 
-Implementé **Screaming Architecture**: la estructura grita el dominio
-(`characters`, `favorites`), no el framework. `app/` solo contiene routing, toda la lógica vive en `features/`, framework-agnostic.
+## ¿Qué fue lo que más me gustó de mi desarrollo?
+
+La separación de capas y que la arquitectura se mantiene sola. La estructura sigue Screaming Architecture: `features/characters` y `features/favorites` son self-contained, cada feature expone su API pública vía `index.ts` y `app/` es un wrapper delgado del framework.
+
+Lo no convencional es que las reglas no son convenciones documentadas, son código. ESLint con `import/no-restricted-paths` define zonas que bloquean importar internals de un feature desde otro feature, desde `app/`, desde `store/` o desde `shared/`. Si alguien intenta `import { useFavorites } from '@/features/favorites/hooks/useFavorites'` desde afuera, el build falla. Solo el barrel es público.
+
+Resultado: `CharacterCard` no sabe que existe Redux, ni `json-server`, ni la API pública. Solo consume `useFavorites` y tipos del dominio. Si mañana migramos a TanStack Query o cambiamos el SDK, los componentes no se enteran.
+
+## Si hubiera tenido más tiempo
+
+- Server Components + Suspense para el panel destacado (mejora TTFB y SEO).
+- E2E con Playwright para los dos flujos críticos: agregar/quitar favorito y navegar el slider cruzando páginas.
+- Pulir la transición de selección con `view-transition-name`.
+- i18n.
+- Modo offline-first con sync, que es donde Redux Saga sí brillaría (cancelación, reintentos, conflicto online/offline).
+
+## Pain points
+
+### 1. Integrar `rickmortyapi` con RTK Query + un bug upstream que rompía todo
+
+`fetchBaseQuery` espera URLs, no funciones. Como la consigna sugiere usar el SDK, lo envolví con `fakeBaseQuery()` + `queryFn` por endpoint, mapeando el shape del SDK (`{ data, status, statusMessage }`) al formato de RTK Query (`{ data } | { error }`). Una vez encontrado el patrón, escala a cualquier SDK no-REST.
+
+Lo costoso fue que la lib literalmente no funciona en `2.3.0`: en `dist/index.js`, `getResource` concatena el endpoint con un `/` extra (`` `${endpoint}/${qs}` ``) cuando `qs` ya empieza con `/`. El resultado:
+
+- `getCharacters({ page: 1 })` → `…/api/character//?page=1` → 404.
+- `getCharacter(1)` → `…/api/character//1` → 404.
+
+Detectarlo me llevó a leer `node_modules` y el repo upstream ([`src/utils/getResource.ts`](https://github.com/afuh/rick-and-morty-api-node/blob/master/src/utils/getResource.ts)). Como la consigna pide usar esa dependencia, no la cambié: apliqué un parche mínimo vía [`patch-package`](https://www.npmjs.com/package/patch-package), versionado en `patches/rickmortyapi+2.3.0.patch`. Es una línea: `` `${e}/${n}` `` → `` `${e}${n}` ``. Se aplica solo con `npm install` gracias al hook `postinstall`.
+
+### 2. El Figma sin un design system definido
+
+Gaps, paddings, sizes, border-radius y colores no siguen una escala consistente, y el layout de mobile y desktop reordena los bloques en vez de compartir estructura. Traducir eso a CSS Modules me obligó a fijar tokens propios (`--accent` en `variables.css`, un único breakpoint en `DESKTOP_QUERY` que leen tanto `useMediaQuery` como los media queries CSS), sostener dos shells (`HomeMobile` y `HomeDesktop`) compartiendo hooks vía Context, y documentar la convención `px` vs `rem`: `px` para medidas que vienen del Figma (imágenes 100/145, shell 1023, popover 300, borders 1/2px), `rem` para spacing, padding, gap y radius. Resultado: unidades predecibles aunque la fuente de verdad sea una captura.
+
+### 3. CSS Modules vs. Tailwind
+
+Personalmente soy más rápido con Tailwind, o incluso Bootstrap para prototipos. CSS Modules sigue siendo la elección correcta para un equipo grande con un design system maduro: scoped, colocalizado, sin runtime. Y por eso lo respeté como pide la prueba. En un proyecto con tokens bien definidos, la fricción de mantener `.module.css` se diluye; sin tokens, el overhead es alto.
+
+## Stack
+
+- Next.js 16 (App Router) + React 19.
+- TypeScript estricto.
+- CSS Modules (+ `clsx`).
+- Redux Toolkit + RTK Query (Toolkit explícitamente permitido por la consigna).
+- `rickmortyapi` (SDK oficial, integrado vía `queryFn`).
+- `json-server` para persistencia de favoritos.
+- Vitest + Testing Library + MSW para tests.
+- ESLint con `import/order`, `import/no-restricted-paths` y `eslint-plugin-testing-library`.
+- React Compiler activado (`reactCompiler: true` en `next.config.ts`).
+
+## Arquitectura
 
 ```
 src/
-├── app/         Next.js routing (page.tsx de pocas líneas)
+├── app/         Routing de Next (page.tsx delgado)
 ├── features/
-│   ├── characters/    Self-contained. Ver features/characters/README.md
-│   └── favorites/     Self-contained. Ver features/favorites/README.md
-├── shared/{ui, styles, lib, test}
-└── store/
+│   ├── characters/   api/ · components/ · hooks/ · types/ · index.ts
+│   └── favorites/    api/ · components/ · hooks/ · types/ · index.ts
+├── shared/      ui/ · hooks/ · styles/ · test/ · utils/
+└── store/       configureStore + hooks tipados
 ```
 
 ### Reglas que la sostienen
 
-1. Cada feature expone su API pública vía `index.ts` (barrel).
+1. Cada feature expone su API pública vía `index.ts`.
 2. Dependencia: `app → features → shared`. Nunca al revés.
-3. Componentes nunca tocan Redux directo: consumen su capa de integración EJ. `useFavorites`.
-4. **Boundaries entre features ejecutables** (no documentados): la regla
-   ESLint `import/no-restricted-paths` define zonas que bloquean importar
-   internals de un feature desde otro feature, desde `app/`, desde
-   `store/` o desde `shared/`. Solo se permite el `index.ts`. Los
-   internals de un feature siguen siendo libres de importarse entre sí.
-   Si alguien intenta `import { X } from '@/features/favorites/hooks/X'`
-   desde afuera, el lint falla — la arquitectura se mantiene sola.
+3. Componentes nunca tocan Redux directo; consumen su capa de integración (ej. `useFavorites`).
+4. Boundaries ejecutables (no documentadas): `import/no-restricted-paths` bloquea importar internals de un feature desde afuera. Solo el `index.ts` es público.
 
-## Decisiones de arquitectura
+## Decisiones técnicas
 
 ### Estrategia única de fetching: RTK Query
 
-Toda la data — pública (Rick and Morty vía SDK) y propia (favoritos en
-`json-server`) — se consume vía RTK Query. Evalué tres alternativas:
+Toda la data, pública (Rick and Morty vía SDK) y propia (favoritos en `json-server`), se consume vía RTK Query. Cache, dedupe, `setupListeners` y prefetch de fábrica. Para el SDK uso `fakeBaseQuery()` + `queryFn`; para `json-server`, `fetchBaseQuery` estándar.
 
-1. **RTK Query para todo** (elegida).
-2. Server components con `fetch` para datos read-only + RTK Query para
-   interactivos. Aprovecha mejor SSR pero introduce dos modelos mentales para
-   el mismo dominio y complica la hidratación.
-3. API routes de Next como BFF. Aislaría al frontend de las APIs externas,
-   pero no aporta beneficio claro: la API pública no requiere secrets ni
-   reformateo, y `json-server` es lo que el examen pide consumir directamente.
-
-Elegí (1) por consistencia. Cache, deduplicación y `setupListeners` cubren
-todos los casos.
-
-### SDK `rickmortyapi` integrado vía `queryFn`
-
-Las funciones del SDK (`getCharacter`, `getCharacters`) se envuelven en
-`queryFn` con `fakeBaseQuery()`. Combina lo mejor de ambos: las funciones
-tipadas y mantenidas del SDK con el cache, dedupe e hooks generados de
-RTK Query.
-
-Re-exporto los tipos del SDK (`Character`, `Info`, `CharacterFilter`) en
-lugar de duplicarlos. Si la API agrega un campo o un nuevo `status`, el
-código se actualiza al actualizar el paquete.
-
-### `json-server`: ¿qué guarda?
-
-Estado del usuario (favoritos), no mirror del catálogo. Una fuente de verdad
-por dominio.
-
-### Aislamiento de favoritos por browser (`ownerId`)
-
-`json-server` no tiene auth, así que sin scoping todos los browsers
-comparten la misma colección de favoritos. Para evitarlo, cada browser
-genera un UUID (`crypto.randomUUID()`) en `localStorage` la primera vez
-y lo incluye:
-
-- en `GET /favorites?ownerId=...` para filtrar (json-server soporta
-  filtros por query param de forma nativa).
-- en el body de `POST /favorites` para etiquetar el record.
-
-El hook `useOwnerId` encapsula la lectura/generación y es SSR-safe
-(devuelve `null` en el primer render y se hidrata al montar). Mientras
-no esté disponible, `useGetFavoritesQuery` se pausa con `skip`.
-
-### Forma del record `Favorite`
-
-El `id` del record en json-server (string autogenerado) **no es** el id
-del personaje. El record guarda ambos por separado:
-
-```ts
-type Favorite = {
-  id: string; // primary key de json-server
-  ownerId: string; // UUID por browser
-  characterId: number; // id del personaje en la API pública
-  character: Character; // snapshot completo (evita refetch al renderizar)
-};
-```
+Re-exporto los tipos del SDK (`Character`, `Info`, `CharacterFilter`) en lugar de duplicarlos. Si la API agrega un campo o un nuevo `status`, el código se actualiza al actualizar el paquete.
 
 ### `useOptimistic` (React 19) sobre `updateQueryData`
 
-El hook nativo maneja el optimismo en render concurrente, con coherencia
-automática ante toggles consecutivos rápidos. RTK Query solo se ocupa del
-round-trip y de invalidar cache al confirmar la mutación.
+El optimismo de favoritos lo maneja `useOptimistic`, no `onQueryStarted` + `updateQueryData` con rollback manual. El estado optimista vive en render concurrente y RTK Query se ocupa solo del round-trip y de invalidar cache. Una sola fuente de verdad para el optimismo y coherencia automática ante toggles consecutivos rápidos.
 
-### Visibilidad de las flechas del slider
+### Aislamiento de favoritos por browser (`ownerId`)
 
-Se solicita en el documento de Figma ocultar las flechas del slider al buscar, pero hay
-casos en los que la búsqueda todavía devuelve más resultados que los
-que entran en la ventana visible (2 mobile / 4 desktop), y ahí las
-flechas siguen siendo necesarias para recorrer.
+`json-server` no tiene auth, así que sin scoping todos los browsers ven los mismos favoritos. Cada browser genera un UUID (`crypto.randomUUID()`) en `localStorage` la primera vez y lo incluye en `GET /favorites?ownerId=…` y en el body del `POST`. El hook `useOwnerId` usa `useSyncExternalStore` para ser SSR-safe sin disparar re-renders innecesarios.
 
-La regla que apliqué es más estricta y se sostiene sola: **las flechas
-solo se ocultan cuando el resultado es exactamente uno** (`info.count
-=== 1`). Con un único item no hay nada que paginar y las flechas
-quedarían `disabled` en ambos extremos, ocupando espacio sin función;
-con dos o más, se mantienen porque la ventana sí necesita avanzar
-(aunque haya una sola página de 20).
+### Forma del record `Favorite`
 
-Tomo el total de la respuesta de la API (`info.count`), no
-`results.length`, porque el primero refleja el total global del filtro
-y no depende de la página actual.
+El `id` del record (json-server) no es el id del personaje:
+
+```ts
+type Favorite = {
+  id: string; // primary key autogenerada
+  ownerId: string; // UUID por browser
+  characterId: number; // id en la API pública
+  character: Character; // snapshot, evita refetch
+};
+```
+
+Mezclar ambos `id` (primera versión) rompía el toggle: `isFavorite` comparaba contra el id de json-server y nunca matcheaba, así cada click reagregaba el personaje.
+
+### Slider con paginación virtual y prefetch
+
+`useCharactersWindow` mantiene una ventana local de 2 (mobile) o 4 (desktop) items sobre los 20 que devuelve la API por página. Las flechas mueven la ventana; al llegar al final, bumpea `page`. Cuando quedan ≤2 items por mostrar, `usePrefetch` de RTK Query trae la página siguiente, así la transición no muestra loading.
 
 ### `useDeferredValue` en search
 
-El input responde instantáneamente; el query se difiere al valor estable.
-Mejor UX que un debounce manual, sin timeouts ni cleanup.
+El input se actualiza al toque y el query se difiere al valor estable en función de la carga del render. Equivale a un debounce inteligente, sin timeouts ni cleanup.
 
-### `app/` separado de `features/`
+### Visibilidad de flechas del slider
 
-`app/` es del framework. Mantener features afuera permite migrar de framework
-sin tocar dominio. Cada `page.tsx` es de 3 líneas.
+El Figma sugiere ocultar las flechas al buscar, pero un filtro puede seguir devolviendo más resultados que los visibles. La regla aplicada: ocultar solo cuando el resultado es exactamente uno (`info.count === 1`). Con un único item las flechas estarían disabled en ambos extremos; con dos o más, se conservan.
+
+### Tests con valor, no por porcentaje
+
+| Archivo                        | Qué cubre                                              |
+| ------------------------------ | ------------------------------------------------------ |
+| `useFavorites.test.tsx`        | toggle optimista, límite de 4, remove por characterId  |
+| `useCharactersWindow.test.tsx` | navegación de ventana, cruce de página, prefetch       |
+| `CharacterCard.test.tsx`       | render, click → `onSelect`, `aria-pressed`             |
+| `FavoritesMenu.test.tsx`       | open/close, listar, eliminar, seleccionar              |
+
+Skipped a propósito: API slices (código generado por RTK Query), skeletons y primitives UI, `useSelectedCharacter` (wrapper fino sobre Next router), `useOwnerId` y `useMediaQuery` (wrappers sobre APIs del browser).
 
 ## Notas técnicas
 
 ### Parche a `rickmortyapi@2.3.0`
 
-La librería `rickmortyapi` tiene un bug en su
-build publicado: en `dist/index.js`, `getResource` concatena el endpoint y el
-query con un `/` extra (`` `${endpoint}/${qs}` ``), pero `qs` ya empieza con
-`/`. Esto genera URLs malformadas con doble slash:
+Ver pain point 1. El parche está versionado en `patches/rickmortyapi+2.3.0.patch` y se aplica con `npm install`.
 
-- `getCharacters({ page: 1 })` → `https://rickandmortyapi.com/api/character//?page=1`
-- `getCharacter(1)` → `https://rickandmortyapi.com/api/character//1`
+### React Compiler
 
-Con la lib sin parchear, **todas las requests devuelven `404`** (la API no
-normaliza el doble slash). Origen del bug en el repo upstream:
-[`src/utils/getResource.ts`](https://github.com/afuh/rick-and-morty-api-node/blob/master/src/utils/getResource.ts).
+Activado en `next.config.ts`. Permite escribir `useMemo`/`useCallback` solo cuando hay justificación real, no como defensa preventiva.
 
-Como se solicita usar esta dependencia, apliqué un parche mínimo vía
-[`patch-package`](https://www.npmjs.com/package/patch-package), versionado en
-`patches/rickmortyapi+2.3.0.patch`. El cambio es de una sola línea:
-`` `${e}/${n}` `` → `` `${e}${n}` ``. Se aplica automáticamente con
-`npm install` gracias al hook `postinstall`.
+## Cumplimiento de la consigna
 
-## ¿Qué fue lo que más me gustó de mi desarrollo?
-
-La separación de capas. `CharacterCard` no sabe que existe Redux, ni
-`json-server`, ni la API pública. Solo consume `useFavorites` y tipos del
-dominio. Las reglas arquitectónicas no son convenciones documentadas sino
-ESLint rules ejecutables — si alguien intenta importar internals de un
-feature, el build falla. La arquitectura se mantiene sola.
-
-## Si hubiera tenido más tiempo
-
-- Server components + Suspense para el detalle, eliminando JS extra en la
-  primera carga (mejor TTFB y SEO).
-- E2E con Playwright para flujos críticos.
-- Storybook para componentes base.
-- Modo offline-first con sync (caso real para Saga: cancelación, reintentos).
-- `createEntityAdapter` si la lista de favoritos creciera.
-- Internacionalización (es/en).
-- Animaciones con View Transitions API entre lista y detalle.
-
-## Pain point
-
-Integrar el SDK `rickmortyapi` con RTK Query no es directo: `fetchBaseQuery`
-espera URLs, no funciones. La solución fue usar `fakeBaseQuery()` + `queryFn`
-por endpoint, mapeando el shape del SDK
-(`{ data, status, statusMessage }`) al formato de RTK Query
-(`{ data } | { error }`). Adicionalmente, los tipos `Info<T>` del SDK tienen
-`info` y `results` opcionales (porque la API puede devolver error sin esos
-campos), lo que obliga a guardas defensivas en componentes. Una vez encontrado
-el patrón, escala a cualquier SDK no-REST.
-
-A esto se sumó el bug del doble slash en la lib publicada (ver
-[Notas técnicas](#notas-técnicas)): la lib literalmente no funciona en
-v2.3.0 contra la API real. Detectarlo requirió leer `node_modules` y el
-repo upstream, y resolverlo sin abandonar la dependencia (consigna) llevó
-a `patch-package`.
+| Requisito                                     | Estado                                              |
+| --------------------------------------------- | --------------------------------------------------- |
+| React 19 + Next.js                            | ✅ Next 16 (App Router) + React 19                  |
+| TypeScript                                    | ✅ Estricto                                         |
+| CSS Modules                                   | ✅ Todos los estilos como `*.module.css`            |
+| `json-server` para favoritos                  | ✅ `db.json` + scripts `npm run api` y `dev:all`    |
+| Redux Saga / Toolkit / similar para favoritos | ✅ Redux Toolkit + RTK Query                        |
+| Mobile mode                                   | ✅ Shell mobile dedicado (`HomeMobile`)             |
+| Estados de botones                            | ✅ Hover, active, disabled (incluye límite de favs) |
+| Estado Alive / Dead / unknown                 | ✅ `Badge` con variantes de color por status        |
+| Pruebas unitarias                             | ✅ 16 tests con Vitest + MSW                        |
+| README con instrucciones + reflexiones        | ✅ Este archivo                                     |
