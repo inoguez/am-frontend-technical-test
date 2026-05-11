@@ -1,0 +1,55 @@
+.card {
+  background-color: #212121;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  align-self: center;
+  padding: 0.625rem;
+  border-radius: 1.875rem;
+  box-shadow: 0 4px 4px 0 #00000040;
+}
+
+.card:hover {
+  background-color: #4f4f4fcc;
+}
+
+.target {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+}
+
+.media {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  overflow: hidden;
+  background: #111;
+}
+
+@media (min-width: 768px) {
+  .media {
+    width: 145px;
+    height: 145px;
+  }
+}
+
+.media img {
+  object-fit: cover;
+}
+
+.card[data-selected='true'] {
+  border: 2px solid var(--accent);
+}
