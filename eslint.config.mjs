@@ -56,10 +56,50 @@ const eslintConfig = defineConfig([
               group: ['../*'],
               message: 'Use @/ aliases instead of relative parent imports',
             },
-            {
-              group: ['@/features/*/!(index)', '@/features/*/!(index)/**'],
-              message: 'Import from feature public API (index.ts) only',
-            },
+          ],
+        },
+      ],
+
+      /**
+       * Module boundaries entre features. Cada feature solo puede ser
+       * consumido por otros desde su `index.ts` (barrel). Sus internals
+       * siguen siendo libres de importar entre sí.
+       */
+      /**
+       * Module boundaries: cada feature solo es consumido desde su
+       * `index.ts` (barrel). Sus internals siguen siendo libres de
+       * importarse entre sí. Las zonas cubren los 4 consumidores
+       * posibles (otro feature, app, store, shared) por las 2 features.
+       */
+      'import/no-restricted-paths': [
+        'error',
+        {
+          zones: [
+            ...['./src/features/characters', './src/features/favorites']
+              .flatMap((target) =>
+                [
+                  ['./src/features/characters', '@/features/characters'],
+                  ['./src/features/favorites', '@/features/favorites'],
+                ]
+                  .filter(([from]) => from !== target)
+                  .map(([from, alias]) => ({
+                    target,
+                    from,
+                    except: ['./index.ts'],
+                    message: `Importar desde ${alias} (public API), no de sus internals.`,
+                  })),
+              ),
+            ...['./src/app', './src/store', './src/shared'].flatMap((target) =>
+              [
+                ['./src/features/characters', '@/features/characters'],
+                ['./src/features/favorites', '@/features/favorites'],
+              ].map(([from, alias]) => ({
+                target,
+                from,
+                except: ['./index.ts'],
+                message: `Importar desde ${alias} (public API), no de sus internals.`,
+              })),
+            ),
           ],
         },
       ],
