@@ -1,0 +1,116 @@
+.root {
+  position: absolute;
+  bottom: 0;
+  z-index: 2;
+  background-color: #5b5454;
+  border-radius: 0.5rem 0.5rem 0 0;
+  overflow: hidden;
+  transition: height 220ms ease;
+  width: 300px;
+}
+
+.root[data-open='true'] {
+  height: auto;
+}
+
+.trigger {
+  box-sizing: border-box;
+  width: 100%;
+  appearance: none;
+  background: transparent;
+  color: #ddd;
+  border: 0;
+  padding: 0.75rem 2.5rem;
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  text-align: center;
+  transition: color 150ms ease;
+}
+
+.trigger:hover {
+  color: var(--accent);
+}
+
+.body {
+  padding: 0.625rem 0;
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: calc(4 * 3rem);
+  overflow-y: auto;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 1rem;
+  background: #9c9c9c;
+  border: 1px solid #494949;
+}
+
+.item:last-child {
+  border-bottom: 0;
+}
+
+.name {
+  flex: 1;
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: #fff;
+  font-size: 0.95rem;
+  text-align: left;
+  padding: 0.25rem 0;
+}
+
+button.name {
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+button.name:hover {
+  color: var(--accent);
+}
+
+.remove {
+  appearance: none;
+  background: transparent;
+  border: 0;
+  color: #aaa;
+  padding: 0.25rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 0.25rem;
+  transition:
+    color 150ms ease,
+    background 150ms ease;
+}
+
+.remove:hover svg > rect {
+  fill: #ff5a5a;
+  stroke: #ff5a5a;
+}
+.remove:hover svg > path {
+  stroke: #ff5a5a;
+}
+
+.empty {
+  margin: 0;
+  padding: 1rem;
+  color: #aaa;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .root {
+    transition: none;
+  }
+}
